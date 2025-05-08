@@ -27,7 +27,7 @@ jobs:
         
     - name: Create preprocessing directory
       run: |
-        mkdir -p preprocessing/data_balita_preprocessing
+        mkdir -p preprocessing/balita_stunting_status_preprocessing
         
     - name: Run preprocessing
       run: |
@@ -37,8 +37,8 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        if [ -d "preprocessing/data_balita_preprocessing" ]; then
-          git add preprocessing/data_balita_preprocessing/
+        if [ -d "preprocessing/balita_stunting_status_preprocessing" ]; then
+          git add preprocessing/balita_stunting_status_preprocessing/
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else

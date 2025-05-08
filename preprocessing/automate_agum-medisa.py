@@ -170,7 +170,7 @@ def load_preprocessed_data(load_path):
 if __name__ == "__main__":
     # Example usage
     url = 'https://raw.githubusercontent.com/agummds/Predictive-Analytics/master/Dataset/data_balita.csv'
-    save_path = 'data_balita_preprocessing'
+    save_path = 'preprocessing/balita_stunting_status_preprocessing'
     
     # Load and preprocess data
     df = load_data(url=url)
