@@ -23,7 +23,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r preprocessing/requirements.txt
+        
+    - name: Create preprocessing directory
+      run: |
+        mkdir -p preprocessing/data_balita_preprocessing
         
     - name: Run preprocessing
       run: |
@@ -33,5 +37,14 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add preprocessing/data_balita_preprocessing/
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update preprocessed data [skip ci]" && git push) 
+        if [ -d "preprocessing/data_balita_preprocessing" ]; then
+          git add preprocessing/data_balita_preprocessing/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update preprocessed data [skip ci]"
+            git push
+          fi
+        else
+          echo "No preprocessing directory found"
+        fi 
