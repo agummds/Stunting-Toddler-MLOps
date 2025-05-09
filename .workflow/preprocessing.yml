@@ -49,11 +49,14 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
         
-    - name: Commit and push if changes
+    - name: Create and push to automated branch
       run: |
         if [ -d "preprocessing/data_balita_preprocessing" ]; then
           # Configure remote with token
           git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}
+          
+          # Create and switch to automated branch
+          git checkout -b automated-preprocessing
           
           # Add changes
           git add preprocessing/data_balita_preprocessing/
@@ -61,20 +64,25 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            # Pull latest changes first
-            echo "Pulling latest changes..."
-            git pull origin main
-            
             # Commit changes
             echo "Committing changes..."
             git commit -m "Update preprocessed data [skip ci]"
             
-            # Push changes
-            echo "Pushing changes..."
-            git push origin main
+            # Push to automated branch
+            echo "Pushing changes to automated branch..."
+            git push origin automated-preprocessing
+            
+            # Create pull request
+            echo "Creating pull request..."
+            gh pr create \
+              --title "Update preprocessed data" \
+              --body "Automated update of preprocessed data" \
+              --base main \
+              --head automated-preprocessing
           fi
         else
           echo "No preprocessing directory found"
         fi
       env:
-        PAT_TOKEN: ${{ secrets.PAT_TOKEN }} 
+        PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }} 
