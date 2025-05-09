@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
-      - 'balita_stunting_status/**'
+      - 'data/**'
       - 'preprocessing/**'
   workflow_dispatch:  # Allows manual triggering
 
@@ -45,6 +45,20 @@ jobs:
       run: |
         python preprocessing/automate_agum-medisa.py
         
+    - name: Validate preprocessing results
+      run: |
+        if [ ! -d "preprocessing/data_balita_preprocessing" ]; then
+          echo "Error: Preprocessing output directory not found"
+          exit 1
+        fi
+        
+        if [ -z "$(ls -A preprocessing/data_balita_preprocessing)" ]; then
+          echo "Error: No preprocessed files found"
+          exit 1
+        fi
+        
+        echo "Preprocessing validation successful"
+        
     - name: Configure Git
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -84,6 +98,7 @@ jobs:
           fi
         else
           echo "No preprocessing directory found"
+          exit 1
         fi
       env:
         PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
