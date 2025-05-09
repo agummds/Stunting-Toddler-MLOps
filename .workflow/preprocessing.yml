@@ -56,13 +56,21 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            # Pull latest changes first
-            git pull origin main --rebase
-            git commit -m "Update preprocessed data [skip ci]"
-            echo "Pushing changes..."
-            git remote -v
+            # Configure remote
             git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}
-            git push origin main
+            
+            # Fetch latest changes
+            git fetch origin main
+            
+            # Reset to origin/main and apply our changes
+            git reset --soft origin/main
+            
+            # Commit changes
+            git commit -m "Update preprocessed data [skip ci]"
+            
+            # Push with force-with-lease
+            echo "Pushing changes..."
+            git push --force-with-lease origin main
           fi
         else
           echo "No preprocessing directory found"
