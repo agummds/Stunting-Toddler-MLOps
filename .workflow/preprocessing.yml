@@ -19,6 +19,7 @@ jobs:
         ref: main
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
+        persist-credentials: true
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -48,6 +49,7 @@ jobs:
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
+        git config --global --add safe.directory /github/workspace
         
     - name: Create and push to automated branch
       run: |
@@ -56,7 +58,7 @@ jobs:
           git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}
           
           # Create and switch to automated branch
-          git checkout -b automated-preprocessing
+          git checkout -b automated-preprocessing || git checkout automated-preprocessing
           
           # Add changes
           git add preprocessing/data_balita_preprocessing/
@@ -70,7 +72,7 @@ jobs:
             
             # Push to automated branch
             echo "Pushing changes to automated branch..."
-            git push origin automated-preprocessing
+            git push -u origin automated-preprocessing
             
             # Create pull request
             echo "Creating pull request..."
