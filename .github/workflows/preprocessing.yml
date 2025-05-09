@@ -2,7 +2,7 @@ name: Automated Data Preprocessing
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'balita_stunting_status/**'
       - 'preprocessing/**'
@@ -16,7 +16,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        ref: main
+        ref: master
         token: ${{ secrets.PAT_TOKEN }}
         fetch-depth: 0
         persist-credentials: true
@@ -79,7 +79,7 @@ jobs:
             gh pr create \
               --title "Update preprocessed data" \
               --body "Automated update of preprocessed data" \
-              --base main \
+              --base master \
               --head automated-preprocessing
           fi
         else
