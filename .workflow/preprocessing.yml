@@ -56,6 +56,8 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
+            # Pull latest changes first
+            git pull origin main --rebase
             git commit -m "Update preprocessed data [skip ci]"
             echo "Pushing changes..."
             git remote -v
