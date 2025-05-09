@@ -52,25 +52,26 @@ jobs:
     - name: Commit and push if changes
       run: |
         if [ -d "preprocessing/data_balita_preprocessing" ]; then
+          # Configure remote with token
+          git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}
+          
+          # Add changes
           git add preprocessing/data_balita_preprocessing/
+          
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            # Configure remote
-            git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}
-            
-            # Fetch latest changes
-            git fetch origin main
-            
-            # Reset to origin/main and apply our changes
-            git reset --soft origin/main
+            # Pull latest changes first
+            echo "Pulling latest changes..."
+            git pull origin main
             
             # Commit changes
+            echo "Committing changes..."
             git commit -m "Update preprocessed data [skip ci]"
             
-            # Push with force-with-lease
+            # Push changes
             echo "Pushing changes..."
-            git push --force-with-lease origin main
+            git push origin main
           fi
         else
           echo "No preprocessing directory found"
