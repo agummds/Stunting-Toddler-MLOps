@@ -8,13 +8,14 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+from dotenv import load_dotenv
 
-# Set DagsHub credentials
-os.environ['MLFLOW_TRACKING_USERNAME'] = 'agummds'  # Your DagsHub username
-os.environ['MLFLOW_TRACKING_PASSWORD'] = '48ac90871d91db0a55ba38bee5c924b6ed95ec25'  # Replace with your DagsHub access token
+# Load environment variables from .env file
+load_dotenv()
 
-# Set MLflow tracking URI to your DagsHub repository
-mlflow.set_tracking_uri("https://dagshub.com/agummds/Stunting-Toddler.mlflow")
+# Set MLflow tracking URI (public URL)
+MLFLOW_TRACKING_URI = "https://dagshub.com/agummds/Stunting-Toddler.mlflow"
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 def load_data():
     """Load preprocessed data"""
