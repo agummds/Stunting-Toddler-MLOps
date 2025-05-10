@@ -15,6 +15,12 @@ load_dotenv()
 
 # Set MLflow tracking URI (public URL)
 MLFLOW_TRACKING_URI = "https://dagshub.com/agummds/Stunting-Toddler.mlflow"
+
+# Set MLflow credentials from environment variables
+os.environ['MLFLOW_TRACKING_USERNAME'] = os.getenv('MLFLOW_TRACKING_USERNAME')
+os.environ['MLFLOW_TRACKING_PASSWORD'] = os.getenv('MLFLOW_TRACKING_PASSWORD')
+
+# Set tracking URI
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 def load_data():
