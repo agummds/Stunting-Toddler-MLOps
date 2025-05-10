@@ -70,5 +70,4 @@ jobs:
         conda activate stunting-prediction
         mlflow run MLProject \
           --experiment-name "stunting-prediction" \
-          --env-manager=conda \
-          --no-conda 
+          --env-manager=conda 
