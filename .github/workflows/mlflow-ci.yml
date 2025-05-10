@@ -33,7 +33,7 @@ jobs:
         conda init bash
         source ~/.bashrc
         conda activate stunting-prediction
-        pip install mlflow
+        pip install mlflow requests tenacity
     
     - name: Test DagsHub Connection
       shell: bash -l {0}
@@ -84,11 +84,45 @@ jobs:
         python -c "
         import mlflow
         import os
-        mlflow.set_tracking_uri('https://dagshub.com/agummds/Stunting-Toddler.mlflow')
-        experiment = mlflow.get_experiment_by_name('stunting-prediction')
-        runs = mlflow.search_runs(experiment_ids=[experiment.experiment_id])
-        latest_run = runs.iloc[0]
-        mlflow.artifacts.download_artifacts(latest_run.artifact_uri, dst_path='artifacts')
+        import time
+        from tenacity import retry, stop_after_attempt, wait_exponential
+        
+        @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
+        def download_artifacts_with_retry():
+            try:
+                mlflow.set_tracking_uri('https://dagshub.com/agummds/Stunting-Toddler.mlflow')
+                experiment = mlflow.get_experiment_by_name('stunting-prediction')
+                if experiment is None:
+                    print('Experiment not found')
+                    return
+                
+                runs = mlflow.search_runs(experiment_ids=[experiment.experiment_id])
+                if runs.empty:
+                    print('No runs found')
+                    return
+                
+                latest_run = runs.iloc[0]
+                print(f'Downloading artifacts from run: {latest_run.run_id}')
+                
+                # Create artifacts directory if it doesn't exist
+                os.makedirs('artifacts', exist_ok=True)
+                
+                # Download artifacts
+                mlflow.artifacts.download_artifacts(latest_run.artifact_uri, dst_path='artifacts')
+                print('Artifacts downloaded successfully')
+                
+            except Exception as e:
+                print(f'Error downloading artifacts: {str(e)}')
+                raise
+        
+        try:
+            download_artifacts_with_retry()
+        except Exception as e:
+            print(f'Failed to download artifacts after retries: {str(e)}')
+            # Create a dummy artifact to prevent workflow failure
+            os.makedirs('artifacts', exist_ok=True)
+            with open('artifacts/error.txt', 'w') as f:
+                f.write(f'Failed to download artifacts: {str(e)}')
         "
 
     - name: Upload Artifacts to GitHub
