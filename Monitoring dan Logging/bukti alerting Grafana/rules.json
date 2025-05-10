@@ -1,0 +1,171 @@
+{
+  "apiVersion": 1,
+  "groups": [
+    {
+      "name": "ML Model Alerts",
+      "folder": "ML Model",
+      "interval": "1m",
+      "rules": [
+        {
+          "name": "High CPU Usage",
+          "condition": "B",
+          "state": "OK",
+          "for": "5m",
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "annotations": {
+            "description": "CPU usage is above 80% for 5 minutes",
+            "summary": "High CPU usage alert"
+          },
+          "labels": {
+            "severity": "warning"
+          },
+          "grafana_alert": {
+            "title": "High CPU Usage",
+            "condition": "B",
+            "data": [
+              {
+                "refId": "A",
+                "queryType": "reduce",
+                "relativeTimeRange": {
+                  "from": 600,
+                  "to": 0
+                },
+                "datasourceUid": "prometheus",
+                "model": {
+                  "type": "reduce",
+                  "reducer": "avg",
+                  "expression": "A"
+                }
+              },
+              {
+                "refId": "B",
+                "queryType": "threshold",
+                "relativeTimeRange": {
+                  "from": 0,
+                  "to": 0
+                },
+                "datasourceUid": "prometheus",
+                "model": {
+                  "type": "threshold",
+                  "conditions": [
+                    {
+                      "type": "gt",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "High Memory Usage",
+          "condition": "B",
+          "state": "OK",
+          "for": "5m",
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "annotations": {
+            "description": "Memory usage is above 80% for 5 minutes",
+            "summary": "High memory usage alert"
+          },
+          "labels": {
+            "severity": "warning"
+          },
+          "grafana_alert": {
+            "title": "High Memory Usage",
+            "condition": "B",
+            "data": [
+              {
+                "refId": "A",
+                "queryType": "reduce",
+                "relativeTimeRange": {
+                  "from": 600,
+                  "to": 0
+                },
+                "datasourceUid": "prometheus",
+                "model": {
+                  "type": "reduce",
+                  "reducer": "avg",
+                  "expression": "A"
+                }
+              },
+              {
+                "refId": "B",
+                "queryType": "threshold",
+                "relativeTimeRange": {
+                  "from": 0,
+                  "to": 0
+                },
+                "datasourceUid": "prometheus",
+                "model": {
+                  "type": "threshold",
+                  "conditions": [
+                    {
+                      "type": "gt",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "High Error Rate",
+          "condition": "B",
+          "state": "OK",
+          "for": "5m",
+          "noDataState": "OK",
+          "execErrState": "Error",
+          "annotations": {
+            "description": "Error rate is above 5% for 5 minutes",
+            "summary": "High error rate alert"
+          },
+          "labels": {
+            "severity": "critical"
+          },
+          "grafana_alert": {
+            "title": "High Error Rate",
+            "condition": "B",
+            "data": [
+              {
+                "refId": "A",
+                "queryType": "reduce",
+                "relativeTimeRange": {
+                  "from": 600,
+                  "to": 0
+                },
+                "datasourceUid": "prometheus",
+                "model": {
+                  "type": "reduce",
+                  "reducer": "avg",
+                  "expression": "A"
+                }
+              },
+              {
+                "refId": "B",
+                "queryType": "threshold",
+                "relativeTimeRange": {
+                  "from": 0,
+                  "to": 0
+                },
+                "datasourceUid": "prometheus",
+                "model": {
+                  "type": "threshold",
+                  "conditions": [
+                    {
+                      "type": "gt",
+                      "value": 5
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+} 

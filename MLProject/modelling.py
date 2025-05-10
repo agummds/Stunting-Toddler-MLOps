@@ -19,10 +19,10 @@ mlflow.set_tracking_uri("https://dagshub.com/agummds/Stunting-Toddler.mlflow")
 def load_data():
     """Load preprocessed data"""
     # Load the preprocessed data
-    X_train = pd.read_csv('../preprocessing/data_balita_preprocessing/X_train.csv')
-    X_test = pd.read_csv('../preprocessing/data_balita_preprocessing/X_test.csv')
-    y_train = pd.read_csv('../preprocessing/data_balita_preprocessing/y_train.csv')
-    y_test = pd.read_csv('../preprocessing/data_balita_preprocessing/y_test.csv')
+    X_train = pd.read_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/X_train.csv')
+    X_test = pd.read_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/X_test.csv')
+    y_train = pd.read_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/y_train.csv')
+    y_test = pd.read_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/y_test.csv')
     
     return X_train, X_test, y_train, y_test
 
@@ -68,6 +68,10 @@ def main():
     # Load data
     X_train, X_test, y_train, y_test = load_data()
     
+    # Create local model directory
+    local_model_dir = "models"
+    os.makedirs(local_model_dir, exist_ok=True)
+    
     # Start MLflow run
     with mlflow.start_run(run_name="model_training"):
         # Log parameters
@@ -85,8 +89,12 @@ def main():
         for metric_name, metric_value in metrics.items():
             mlflow.log_metric(metric_name, metric_value)
         
-        # Log model
+        # Log model to MLflow
         mlflow.sklearn.log_model(model, "model")
+        
+        # Save model locally
+        local_model_path = os.path.join(local_model_dir, "model")
+        mlflow.sklearn.save_model(model, local_model_path)
         
         # Create and log confusion matrix
         plot_confusion_matrix(y_test, y_pred, "confusion_matrix.png")
