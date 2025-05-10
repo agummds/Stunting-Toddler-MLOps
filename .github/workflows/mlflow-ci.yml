@@ -25,17 +25,24 @@ jobs:
         python-version: '3.8'
         activate-environment: 'stunting-prediction'
         environment-file: MLProject/conda.yaml
+        auto-activate-base: false
     
     - name: Install MLflow
+      shell: bash -l {0}
       run: |
+        conda init bash
+        source ~/.bashrc
         conda activate stunting-prediction
         pip install mlflow
     
     - name: Run MLflow Project
+      shell: bash -l {0}
       env:
         MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
         MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
       run: |
+        conda init bash
+        source ~/.bashrc
         conda activate stunting-prediction
         mlflow run MLProject \
           --experiment-name "stunting-prediction" \
