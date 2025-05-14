@@ -11,3 +11,46 @@ Workflow-CI/workflows
 Workflow-CI/workflows
 Workflow-CI/workflows
 Workflow-CI/workflows
+
+# GitHub Actions
+.github/workflows/
+Workflow-CI/.github/workflows/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Model files
+*.joblib
+*.pkl
+*.h5
+*.model
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.db
+*.sqlite3
+
+# Logs
+*.log
+logs/
