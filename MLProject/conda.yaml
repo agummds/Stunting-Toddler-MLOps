@@ -1,0 +1,14 @@
+name: ml-project
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pip
+  - numpy
+  - pandas
+  - scikit-learn
+  - joblib
+  - pip:
+    - mlflow
+    - pytest 
