@@ -1,7 +1,3 @@
-Tentu, saya akan membantu Anda memperbaiki file README untuk repositori Anda. Berikut adalah versi yang lebih terstruktur dan komprehensif yang menggabungkan informasi dari semua file yang Anda berikan.
-
------
-
 # Proyek MLOps: Deteksi Stunting pada Balita
 
 Repositori ini berisi proyek *machine learning* untuk mendeteksi stunting pada balita, yang diimplementasikan dengan alur kerja MLOps lengkap, mulai dari pemrosesan data, pelatihan model, hingga pemantauan (*monitoring*).
