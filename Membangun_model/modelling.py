@@ -31,7 +31,7 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 # --- Define Paths ---
 # Sebaiknya definisikan semua path di satu tempat agar mudah dikelola
-RAW_DATA_PATH = 'data/raw_data.csv'
+RAW_DATA_PATH = 'https://raw.githubusercontent.com/agummds/Predictive-Analytics/master/Dataset/data_balita.csv'
 PROCESSED_DATA_DIR = 'data/processed'
 PREPROCESSOR_DIR = 'preprocessors'
 MODEL_DIR = 'models'
