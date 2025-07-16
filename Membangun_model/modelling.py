@@ -13,6 +13,7 @@ from sklearn.pipeline import Pipeline
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import joblib
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -28,10 +29,21 @@ os.environ['MLFLOW_TRACKING_PASSWORD'] = os.getenv('MLFLOW_TRACKING_PASSWORD')
 # Set tracking URI
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
+# --- Define Paths ---
+# Sebaiknya definisikan semua path di satu tempat agar mudah dikelola
+RAW_DATA_PATH = 'data/raw_data.csv'
+PROCESSED_DATA_DIR = 'data/processed'
+PREPROCESSOR_DIR = 'preprocessors'
+MODEL_DIR = 'models'
+REPORTS_DIR = 'reports/figures'
+TARGET_COLUMN = 'Status' # GANTI DENGAN NAMA KOLOM TARGET ANDA
+
 def load_raw_data():
     """Load raw data"""
-    # Adjust path as needed
-    data = pd.read_csv('../Eksperimen_SML_Agum Medisa/data/raw_data.csv') 
+    # Pastikan direktori ada sebelum membuat file
+    os.makedirs(os.path.dirname(RAW_DATA_PATH), exist_ok=True)
+    # Gunakan path yang sudah didefinisikan
+    data = pd.read_csv(RAW_DATA_PATH)
     return data
 
 def preprocess_data(data, test_size=0.2, random_state=42):
@@ -41,22 +53,22 @@ def preprocess_data(data, test_size=0.2, random_state=42):
     categorical_cols = data.select_dtypes(include=['object', 'category']).columns.tolist()
     numerical_cols = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
     
-    # Remove target column from features if it exists
-    if 'target_column' in numerical_cols:  # Replace with actual target column name
-        numerical_cols.remove('target_column')
-    if 'target_column' in categorical_cols:
-        categorical_cols.remove('target_column')
+    # Remove target column from features
+    if TARGET_COLUMN in numerical_cols:
+        numerical_cols.remove(TARGET_COLUMN)
+    if TARGET_COLUMN in categorical_cols:
+        categorical_cols.remove(TARGET_COLUMN)
     
     # Define preprocessing for numerical features
     numerical_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='median')),  # Handle missing values
-        ('scaler', StandardScaler())  # Standardize features
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler())
     ])
     
     # Define preprocessing for categorical features
     categorical_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='most_frequent')),  # Handle missing values
-        ('encoder', OneHotEncoder(handle_unknown='ignore', sparse_output=False))  # Encode categorical variables
+        ('imputer', SimpleImputer(strategy='most_frequent')),
+        ('encoder', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
     ])
     
     # Combine preprocessing steps
@@ -66,76 +78,61 @@ def preprocess_data(data, test_size=0.2, random_state=42):
             ('cat', categorical_transformer, categorical_cols)
         ])
     
-    # Assume the last column is the target (adjust as needed)
-    target_column = 'target_column'  # Replace with actual target column name
-    X = data.drop(columns=[target_column])
-    y = data[target_column]
+    X = data.drop(columns=[TARGET_COLUMN])
+    y = data[TARGET_COLUMN]
     
-    # Encode target if needed
+    # Encode target
     le = LabelEncoder()
-    y = le.fit_transform(y)
+    y_encoded = le.fit_transform(y)
     
-    # Split data into train and test sets
+    # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state, stratify=y
+        X, y_encoded, test_size=test_size, random_state=random_state, stratify=y_encoded
     )
     
     # Fit and transform the training data
     X_train_processed = preprocessor.fit_transform(X_train)
-    
-    # Transform the test data
     X_test_processed = preprocessor.transform(X_test)
     
     # Get feature names after one-hot encoding
-    feature_names = []
-    
-    # Add numerical feature names
-    feature_names.extend(numerical_cols)
-    
-    # Add encoded categorical feature names
-    for i, col in enumerate(categorical_cols):
-        encoder = preprocessor.named_transformers_['cat'].named_steps['encoder']
-        categories = encoder.categories_[i]
-        feature_names.extend([f"{col}_{category}" for category in categories])
-    
+    cat_feature_names = preprocessor.named_transformers_['cat'].named_steps['encoder'].get_feature_names_out(categorical_cols)
+    feature_names = numerical_cols + list(cat_feature_names)
+
     # Apply feature selection
     selector = SelectFromModel(RandomForestClassifier(n_estimators=100, random_state=42), threshold='median')
     X_train_selected = selector.fit_transform(X_train_processed, y_train)
     X_test_selected = selector.transform(X_test_processed)
     
-    # Get selected feature indices
-    selected_indices = selector.get_support()
-    selected_feature_names = [name for i, name in enumerate(feature_names) if i < len(selected_indices) and selected_indices[i]]
+    # Get selected feature names
+    selected_feature_names = [name for name, supported in zip(feature_names, selector.get_support()) if supported]
     
-    # Convert to DataFrame for better handling
+    # Convert to DataFrame
     X_train_df = pd.DataFrame(X_train_selected, columns=selected_feature_names)
     X_test_df = pd.DataFrame(X_test_selected, columns=selected_feature_names)
     y_train_df = pd.DataFrame(y_train, columns=['target'])
     y_test_df = pd.DataFrame(y_test, columns=['target'])
     
     # Save preprocessed data
-    os.makedirs('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing', exist_ok=True)
-    X_train_df.to_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/X_train.csv', index=False)
-    X_test_df.to_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/X_test.csv', index=False)
-    y_train_df.to_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/y_train.csv', index=False)
-    y_test_df.to_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/y_test.csv', index=False)
+    os.makedirs(PROCESSED_DATA_DIR, exist_ok=True)
+    X_train_df.to_csv(os.path.join(PROCESSED_DATA_DIR, 'X_train.csv'), index=False)
+    X_test_df.to_csv(os.path.join(PROCESSED_DATA_DIR, 'X_test.csv'), index=False)
+    y_train_df.to_csv(os.path.join(PROCESSED_DATA_DIR, 'y_train.csv'), index=False)
+    y_test_df.to_csv(os.path.join(PROCESSED_DATA_DIR, 'y_test.csv'), index=False)
     
-    # Save preprocessor for later use
-    import joblib
-    os.makedirs('preprocessors', exist_ok=True)
-    joblib.dump(preprocessor, 'preprocessors/main_preprocessor.joblib')
-    joblib.dump(selector, 'preprocessors/feature_selector.joblib')
-    joblib.dump(le, 'preprocessors/target_encoder.joblib')
+    # Save preprocessors
+    os.makedirs(PREPROCESSOR_DIR, exist_ok=True)
+    joblib.dump(preprocessor, os.path.join(PREPROCESSOR_DIR, 'main_preprocessor.joblib'))
+    joblib.dump(selector, os.path.join(PREPROCESSOR_DIR, 'feature_selector.joblib'))
+    joblib.dump(le, os.path.join(PREPROCESSOR_DIR, 'target_encoder.joblib'))
     
     return X_train_df, X_test_df, y_train_df, y_test_df, preprocessor, selector
 
 def load_preprocessed_data():
     """Load preprocessed data"""
-    X_train = pd.read_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/X_train.csv')
-    X_test = pd.read_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/X_test.csv')
-    y_train = pd.read_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/y_train.csv')
-    y_test = pd.read_csv('../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/y_test.csv')
-    
+    X_train = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, 'X_train.csv'))
+    X_test = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, 'X_test.csv'))
+    y_train = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, 'y_train.csv'))
+    y_test = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, 'y_test.csv'))
     return X_train, X_test, y_train, y_test
 
 def train_model(X_train, y_train):
@@ -152,8 +149,6 @@ def evaluate_model(model, X_test, y_test):
     """Evaluate model and return metrics"""
     y_pred = model.predict(X_test)
     y_pred_proba = model.predict_proba(X_test)
-    
-    # Convert to numpy arrays to handle multi-class cases properly
     y_test_np = y_test.values.ravel()
     
     metrics = {
@@ -163,11 +158,6 @@ def evaluate_model(model, X_test, y_test):
         'f1': f1_score(y_test_np, y_pred, average='weighted')
     }
     
-    # Additional custom metrics
-    metrics['prediction_confidence'] = np.mean(model.predict_proba(X_test).max(axis=1))
-    metrics['feature_importance_mean'] = np.mean(model.feature_importances_)
-    
-    # Add ROC AUC if binary classification
     if len(np.unique(y_test_np)) == 2:
         metrics['roc_auc'] = roc_auc_score(y_test_np, y_pred_proba[:, 1])
     
@@ -176,7 +166,7 @@ def evaluate_model(model, X_test, y_test):
 def plot_confusion_matrix(y_test, y_pred, save_path):
     """Plot and save confusion matrix"""
     cm = confusion_matrix(y_test, y_pred)
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
     plt.title('Confusion Matrix')
     plt.ylabel('True Label')
@@ -188,15 +178,14 @@ def plot_roc_curve(model, X_test, y_test, save_path):
     """Plot ROC curve for binary classification"""
     y_test_np = y_test.values.ravel()
     
-    # Only for binary classification
     if len(np.unique(y_test_np)) == 2:
         y_pred_proba = model.predict_proba(X_test)[:, 1]
         fpr, tpr, _ = roc_curve(y_test_np, y_pred_proba)
         auc_score = roc_auc_score(y_test_np, y_pred_proba)
         
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(8, 6))
         plt.plot(fpr, tpr, label=f'AUC = {auc_score:.3f}')
-        plt.plot([0, 1], [0, 1], 'k--')  # Random classifier line
+        plt.plot([0, 1], [0, 1], 'k--')
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.title('ROC Curve')
@@ -206,72 +195,68 @@ def plot_roc_curve(model, X_test, y_test, save_path):
         return auc_score
     return None
 
+def plot_feature_importance(model, features, save_path):
+    """Plot and save feature importance"""
+    importance_df = pd.DataFrame({
+        'feature': features,
+        'importance': model.feature_importances_
+    }).sort_values('importance', ascending=False).head(15)
+    
+    plt.figure(figsize=(12, 8))
+    sns.barplot(x='importance', y='feature', data=importance_df)
+    plt.title('Top 15 Feature Importance')
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+
 def main():
     """Main execution function"""
-    # Check if preprocessed data exists
-    preprocess_path = '../Eksperimen_SML_Agum Medisa/preprocessing/data_balita_preprocessing/X_train.csv'
+    # Pastikan direktori untuk menyimpan output ada
+    os.makedirs(MODEL_DIR, exist_ok=True)
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+
+    preprocess_path = os.path.join(PROCESSED_DATA_DIR, 'X_train.csv')
     
     if not os.path.exists(preprocess_path):
         print("Preprocessed data not found. Running preprocessing pipeline...")
-        data = load_raw_data()
-        X_train, X_test, y_train, y_test, preprocessor, selector = preprocess_data(data)
+        raw_data = load_raw_data()
+        X_train, X_test, y_train, y_test, _, _ = preprocess_data(raw_data)
         print("Preprocessing complete and data saved.")
     else:
         print("Loading preprocessed data...")
         X_train, X_test, y_train, y_test = load_preprocessed_data()
     
-    # Create local model directory
-    local_model_dir = "models"
-    os.makedirs(local_model_dir, exist_ok=True)
-    
-    # Start MLflow run
-    with mlflow.start_run(run_name="model_training_v2"):
-        # Log preprocessing parameters
-        mlflow.log_param("preprocessing", "StandardScaler + OneHotEncoder + FeatureSelection")
+    with mlflow.start_run(run_name="model_training_v3"):
+        # Log parameters
         mlflow.log_param("n_estimators", 100)
         mlflow.log_param("max_depth", 10)
-        mlflow.log_param("test_size", 0.2)
         
         # Train model
         model = train_model(X_train, y_train)
         
         # Evaluate model
         metrics, y_pred = evaluate_model(model, X_test, y_test)
+        mlflow.log_metrics(metrics)
         
-        # Log metrics
-        for metric_name, metric_value in metrics.items():
-            mlflow.log_metric(metric_name, metric_value)
-        
-        # Log model to MLflow
+        # Log model
         mlflow.sklearn.log_model(model, "model")
         
-        # Save model locally
-        local_model_path = os.path.join(local_model_dir, "model")
-        mlflow.sklearn.save_model(model, local_model_path)
+        # Save plots
+        cm_path = os.path.join(REPORTS_DIR, "confusion_matrix.png")
+        roc_path = os.path.join(REPORTS_DIR, "roc_curve.png")
+        fi_path = os.path.join(REPORTS_DIR, "feature_importance.png")
         
-        # Create and log confusion matrix
-        plot_confusion_matrix(y_test, y_pred, "confusion_matrix.png")
-        mlflow.log_artifact("confusion_matrix.png")
-        
-        # Create and log ROC curve (if binary classification)
-        roc_auc = plot_roc_curve(model, X_test, y_test, "roc_curve.png")
-        if roc_auc:
-            mlflow.log_artifact("roc_curve.png")
-        
-        # Log feature importance plot
-        feature_importance = pd.DataFrame({
-            'feature': X_train.columns,
-            'importance': model.feature_importances_
-        }).sort_values('importance', ascending=False)
-        
-        plt.figure(figsize=(12, 8))
-        sns.barplot(x='importance', y='feature', data=feature_importance.head(15))
-        plt.title('Top 15 Feature Importance')
-        plt.tight_layout()
-        plt.savefig("feature_importance.png")
-        plt.close()
-        
-        mlflow.log_artifact("feature_importance.png")
+        plot_confusion_matrix(y_test, y_pred, cm_path)
+        plot_roc_curve(model, X_test, y_test, roc_path)
+        plot_feature_importance(model, X_train.columns, fi_path)
+
+        # Log artifacts (plots)
+        mlflow.log_artifact(cm_path)
+        if os.path.exists(roc_path):
+            mlflow.log_artifact(roc_path)
+        mlflow.log_artifact(fi_path)
+
+        print(f"Model and artifacts logged to MLflow. Run ID: {mlflow.active_run().info.run_id}")
 
 if __name__ == "__main__":
     main()
