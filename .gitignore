@@ -1,5 +1,4 @@
 docker-compose.yml
-Dockerfile
 grafana-alerts.json
 prometheus.yml
 test_alert.py
