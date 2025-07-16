@@ -16,10 +16,9 @@ import os
 import joblib
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Set MLflow tracking URI (public URL)
+# Set MLflow tracking URI
 MLFLOW_TRACKING_URI = "https://dagshub.com/agummds/Stunting-Toddler.mlflow"
 
 # Set MLflow credentials from environment variables
@@ -29,25 +28,20 @@ os.environ['MLFLOW_TRACKING_PASSWORD'] = os.getenv('MLFLOW_TRACKING_PASSWORD')
 # Set tracking URI
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-# --- Define Paths ---
-# Sebaiknya definisikan semua path di satu tempat agar mudah dikelola
+# Define Paths
 RAW_DATA_PATH = 'https://raw.githubusercontent.com/agummds/Predictive-Analytics/master/Dataset/data_balita.csv'
 PROCESSED_DATA_DIR = 'data/processed'
 PREPROCESSOR_DIR = 'preprocessors'
 MODEL_DIR = 'models'
 REPORTS_DIR = 'reports/figures'
-TARGET_COLUMN = 'Status' # GANTI DENGAN NAMA KOLOM TARGET ANDA
+TARGET_COLUMN = 'Status Gizi'
 
 def load_raw_data():
-    """Load raw data"""
-    # Pastikan direktori ada sebelum membuat file
     os.makedirs(os.path.dirname(RAW_DATA_PATH), exist_ok=True)
-    # Gunakan path yang sudah didefinisikan
     data = pd.read_csv(RAW_DATA_PATH)
     return data
 
 def preprocess_data(data, test_size=0.2, random_state=42):
-    """Apply comprehensive preprocessing pipeline"""
     
     # 1. Identify numerical and categorical columns
     categorical_cols = data.select_dtypes(include=['object', 'category']).columns.tolist()
@@ -128,7 +122,6 @@ def preprocess_data(data, test_size=0.2, random_state=42):
     return X_train_df, X_test_df, y_train_df, y_test_df, preprocessor, selector
 
 def load_preprocessed_data():
-    """Load preprocessed data"""
     X_train = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, 'X_train.csv'))
     X_test = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, 'X_test.csv'))
     y_train = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, 'y_train.csv'))
@@ -136,7 +129,6 @@ def load_preprocessed_data():
     return X_train, X_test, y_train, y_test
 
 def train_model(X_train, y_train):
-    """Train the model"""
     model = RandomForestClassifier(
         n_estimators=100,
         max_depth=10,
@@ -146,7 +138,6 @@ def train_model(X_train, y_train):
     return model
 
 def evaluate_model(model, X_test, y_test):
-    """Evaluate model and return metrics"""
     y_pred = model.predict(X_test)
     y_pred_proba = model.predict_proba(X_test)
     y_test_np = y_test.values.ravel()
@@ -196,7 +187,6 @@ def plot_roc_curve(model, X_test, y_test, save_path):
     return None
 
 def plot_feature_importance(model, features, save_path):
-    """Plot and save feature importance"""
     importance_df = pd.DataFrame({
         'feature': features,
         'importance': model.feature_importances_
@@ -210,8 +200,6 @@ def plot_feature_importance(model, features, save_path):
     plt.close()
 
 def main():
-    """Main execution function"""
-    # Pastikan direktori untuk menyimpan output ada
     os.makedirs(MODEL_DIR, exist_ok=True)
     os.makedirs(REPORTS_DIR, exist_ok=True)
 
@@ -227,7 +215,6 @@ def main():
         X_train, X_test, y_train, y_test = load_preprocessed_data()
     
     with mlflow.start_run(run_name="model_training_v3"):
-        # Log parameters
         mlflow.log_param("n_estimators", 100)
         mlflow.log_param("max_depth", 10)
         
