@@ -41,7 +41,7 @@ class ModelExporter:
     def predict(self, input_data):
         start_time = time.time()
         try:
-            if self.model is None:
+            if self.model is None: 
                 raise ValueError("Model not loaded")
                 
             # Update system metrics
@@ -69,7 +69,7 @@ def main():
     start_http_server(8000)
     
     # Initialize model exporter
-    model_path = os.getenv('MODEL_PATH', 'MLProject/models/model')  # Updated path to local model
+    model_path = os.getenv('MODEL_PATH', '../Membangun_model/models/model')  # Updated path to local model
     print(f"Using model path: {model_path}")
     model_exporter = ModelExporter(model_path)
     

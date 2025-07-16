@@ -24,7 +24,7 @@ jobs:
       with:
         python-version: '3.8'
         activate-environment: 'stunting-prediction'
-        environment-file: MLProject/conda.yaml
+        environment-file: Membangun_model/conda.yaml
         auto-activate-base: false
     
     - name: Install MLflow
@@ -68,7 +68,7 @@ jobs:
         conda init bash
         source ~/.bashrc
         conda activate stunting-prediction
-        mlflow run MLProject \
+        mlflow run Membangun_model \
           --experiment-name "stunting-prediction" \
           --env-manager=conda
 
@@ -142,7 +142,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: model-artifacts
-        path: MLProject/artifacts
+        path: Membangun_model/artifacts
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -156,6 +156,6 @@ jobs:
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v5
       with:
-        context: ./MLProject
+        context: ./Membangun_model
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/stunting-prediction:latest 

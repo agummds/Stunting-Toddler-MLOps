@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 # Initialize the model exporter
-model_path = os.getenv('MODEL_PATH', 'MLProject/models/model')  # Updated path to local model
+model_path = os.getenv('MODEL_PATH', '../Membangun_model/models/model')  # Updated path to local model
 print(f"Initializing Flask app with model path: {model_path}")
 
 try:
