@@ -48,19 +48,29 @@ class ModelExporter:
             CPU_USAGE.set(psutil.cpu_percent())
             MEMORY_USAGE.set(psutil.Process(os.getpid()).memory_info().rss)
             
+            # Debug info
+            print(f"Input data type: {type(input_data)}")
+            print(f"Input data shape: {input_data.shape if hasattr(input_data, 'shape') else 'No shape'}")
+            print(f"Input data: {input_data}")
+            
             # Make prediction
             prediction = self.model.predict(input_data)
+            print(f"Prediction result: {prediction}")
             
             # Update metrics
             PREDICTION_COUNTER.inc()
             PREDICTION_LATENCY.observe(time.time() - start_time)
-            PREDICTION_PROBABILITY.set(float(prediction[0]))  # Assuming binary classification
+            if prediction is not None and len(prediction) > 0:
+                PREDICTION_PROBABILITY.set(float(prediction[0]))  # Assuming binary classification
             BATCH_SIZE.set(len(input_data))
             
             return prediction
         except Exception as e:
             ERROR_COUNTER.inc()
             print(f"Error during prediction: {str(e)}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            traceback.print_exc()
             return None
 
 def main():
